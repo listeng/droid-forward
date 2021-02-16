@@ -10,7 +10,7 @@ import retrofit2.http.*
 /**
  * Created by tls on 2018/1/13.
  */
-interface ApiService {
+interface FTQQApiService {
 
     @FormUrlEncoded
     @POST("{key}.send")
@@ -21,7 +21,7 @@ interface ApiService {
     ): Call<NotifyResult>
 
     companion object Factory {
-        fun create(): ApiService {
+        fun create(): FTQQApiService {
             val retrofit = Retrofit.Builder()
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create())
@@ -29,7 +29,7 @@ interface ApiService {
                     .build()
 
 
-            return retrofit.create(ApiService::class.java);
+            return retrofit.create(FTQQApiService::class.java);
         }
     }
 }

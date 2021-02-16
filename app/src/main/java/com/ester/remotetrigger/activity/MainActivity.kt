@@ -45,8 +45,15 @@ class MainActivity : AppCompatActivity() {
             edit.apply()
         }
 
+        swBark.setOnClickListener {
+            val edit = sp.edit()
+            edit.putBoolean("send.bark", swBark.isChecked)
+            edit.apply()
+        }
+
         swFTQQ.isChecked = sp.getBoolean("send.ftqq", false)
         swEmail.isChecked = sp.getBoolean("send.email", false)
+        swBark.isChecked = sp.getBoolean("send.bark", false)
     }
 
     private fun setupPermissions() {

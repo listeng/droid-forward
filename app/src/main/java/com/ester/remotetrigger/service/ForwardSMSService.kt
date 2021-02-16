@@ -67,7 +67,7 @@ class ForwardSMSService : Service() {
                     val name = getPeople(tel)
                     val deviceid = getMyNumber()
 
-                    val apiService = ApiService.create()
+                    val apiService = FTQQApiService.create()
                     val text=String.format("%s 打入电话", tel)
                     val desp=String.format(
                                     "电话：%s（%s）<br/>  时间：%s<br/>  设备：%s<br/>",

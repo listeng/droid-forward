@@ -4,11 +4,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import android.util.Log
+import com.ester.remotetrigger.config.BarkNotifyResult
 import com.ester.remotetrigger.config.NotifyResult
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.lang.Exception
+import java.net.URLEncoder
 import java.util.*
 import javax.mail.Address
 import javax.mail.Message
@@ -40,6 +42,13 @@ class ForwardService(context: Context) {
         if (sp.getBoolean("send.email", false)) {
             try {
                 SendEmail(text, desp, sp)
+            } catch (e: Exception) {
+            }
+        }
+
+        if (sp.getBoolean("send.bark", false)) {
+            try {
+                SendBark(text, desp, sp)
             } catch (e: Exception) {
             }
         }
@@ -82,7 +91,7 @@ class ForwardService(context: Context) {
     fun SendFTQQ(text:String, desp:String, sp:SharedPreferences) {
         Log.d(LOG_TAG, "Notify send ftqq")
 
-        val apiService = ApiService.create()
+        val apiService = FTQQApiService.create()
         val call = apiService.sendNotify(sp.getString("settings.ftkey", "") + ".send", text, desp)
         call.enqueue(object : Callback<NotifyResult> {
             override fun onResponse(call: Call<NotifyResult>?, response: Response<NotifyResult>?) {
@@ -94,6 +103,26 @@ class ForwardService(context: Context) {
             }
 
             override fun onFailure(call: Call<NotifyResult>?, t: Throwable?) {
+            }
+        })
+    }
+
+    fun SendBark(text:String, desp:String, sp:SharedPreferences) {
+        Log.d(LOG_TAG, "Notify send bark")
+
+        val apiService = BarkApiService.create()
+        val call = apiService.sendNotify(sp.getString("settings.barkkey", ""), text, desp)
+        call.enqueue(object : Callback<BarkNotifyResult> {
+            override fun onResponse(call: Call<BarkNotifyResult>?, response: Response<BarkNotifyResult>?) {
+                if (response?.code() == 200) {
+                    Log.d(LOG_TAG, "Tel Bark Notify sent ${response.body()?.code}")
+                } else {
+                    Log.e(LOG_TAG, "Tel Bark Notify sent error ${response?.errorBody()}")
+                }
+            }
+
+            override fun onFailure(call: Call<BarkNotifyResult>, t: Throwable) {
+                Log.e(LOG_TAG, "Tel Bark Notify sent error ${t.message}")
             }
         })
     }
