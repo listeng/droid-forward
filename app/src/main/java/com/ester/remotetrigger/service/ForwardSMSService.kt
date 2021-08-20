@@ -1,17 +1,16 @@
 package com.ester.remotetrigger.service
 
 import android.annotation.SuppressLint
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.os.IBinder
 import android.provider.Telephony
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
 import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,7 +33,7 @@ class ForwardSMSService : Service() {
                     for (smsMessage in Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
 
                         val messageBody = "短信 - " + smsMessage.messageBody
-                        val tel = smsMessage.originatingAddress.replace("+86", "")
+                        val tel = smsMessage.originatingAddress!!.replace("+86", "")
                         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
                         val curDate = Date(System.currentTimeMillis())
                         val now = formatter.format(curDate)
@@ -59,21 +58,23 @@ class ForwardSMSService : Service() {
 
                 if (state == TelephonyManager.EXTRA_STATE_IDLE) {
                     // 获取电话号码
-                    val tel = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
-                    Log.d(LOG_TAG, "PhoneStateReceiver onReceive extraIncomingNumber: " + tel)
-                    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
-                    val curDate = Date(System.currentTimeMillis())
-                    val now = formatter.format(curDate)
-                    val name = getPeople(tel)
-                    val deviceid = getMyNumber()
+                    var tel = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
+                    if (tel != null) {
 
-                    val apiService = FTQQApiService.create()
-                    val text=String.format("%s 打入电话", tel)
-                    val desp=String.format(
-                                    "电话：%s（%s）<br/>  时间：%s<br/>  设备：%s<br/>",
-                                    tel, name, now, deviceid)
+                        Log.d(LOG_TAG, "PhoneStateReceiver onReceive extraIncomingNumber: " + tel)
+                        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
+                        val curDate = Date(System.currentTimeMillis())
+                        val now = formatter.format(curDate)
+                        val name = getPeople(tel)
+                        val deviceid = getMyNumber()
 
-                    ForwardService(applicationContext).Send(text, desp)
+                        val text = String.format("%s 打入电话", tel)
+                        val desp = String.format(
+                                "电话：%s（%s）<br/>  时间：%s<br/>  设备：%s<br/>",
+                                tel, name, now, deviceid)
+
+                        ForwardService(applicationContext).Send(text, desp)
+                    }
                 }
             }
         }
@@ -120,33 +121,61 @@ class ForwardSMSService : Service() {
         return "未知联系人"
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        if (intent.action == Constants.ACTION.STARTFOREGROUND_ACTION) {
-            Log.i(LOG_TAG, "Received Start Foreground Intent ")
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null) {
+            if (intent.action == Constants.ACTION.STARTFOREGROUND_ACTION) {
+                Log.i(LOG_TAG, "Received Start Foreground Intent ")
 
-            val notificationIntent = Intent(this, MainActivity::class.java)
-            notificationIntent.action = Constants.ACTION.MAIN_ACTION
-            notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//                val notificationIntent = Intent(this, MainActivity::class.java)
+//                notificationIntent.action = Constants.ACTION.MAIN_ACTION
+//                notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//
+//                val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+//
+//                val icon = BitmapFactory.decodeResource(resources,
+//                        R.mipmap.ic_launcher)
+//
+//                val notification = NotificationCompat.Builder(this, "smsforward")
+//                        .setContentTitle("事件触发器")
+//                        .setTicker("RemoteTrigger")
+//                        .setContentText("持续运行，请勿关闭")
+//                        .setSmallIcon(R.mipmap.ic_launcher)
+//                        .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+//                        .setContentIntent(pendingIntent)
+//                        .setOngoing(true)
+//                        .build()
+//                startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE, notification)
 
-            val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+                val channel = NotificationChannel("smsforward", "事件触发器", NotificationManager.IMPORTANCE_HIGH);
 
-            val icon = BitmapFactory.decodeResource(resources,
-                    R.mipmap.ic_launcher)
+                val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.createNotificationChannel(channel)
 
-            val notification = NotificationCompat.Builder(this, "smsforward")
-                    .setContentTitle("事件触发器")
-                    .setTicker("RemoteTrigger")
-                    .setContentText("持续运行，请勿关闭")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                    .setContentIntent(pendingIntent)
-                    .setOngoing(true)
-                    .build()
-            startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE, notification)
-        } else if (intent.action == Constants.ACTION.STOPFOREGROUND_ACTION) {
-            Log.i(LOG_TAG, "Received Stop Foreground Intent")
-            stopForeground(true)
-            stopSelf()
+                val icon = BitmapFactory.decodeResource(resources,
+                        R.mipmap.ic_launcher)
+
+                val notification = NotificationCompat.Builder(this, "smsforward")
+                        .setContentTitle("事件触发器")
+                        .setTicker("RemoteTrigger")
+                        .setContentText("持续运行，请勿关闭")
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+
+                        .setAutoCancel(false)
+                        .setCategory(Notification.CATEGORY_SERVICE)
+                        .setOngoing(true)
+                        .setPriority(NotificationManager.IMPORTANCE_HIGH)
+
+                        .build()
+
+                startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE, notification)
+
+
+            } else if (intent.action == Constants.ACTION.STOPFOREGROUND_ACTION) {
+                Log.i(LOG_TAG, "Received Stop Foreground Intent")
+                stopForeground(true)
+                stopSelf()
+            }
         }
         return Service.START_STICKY
     }
@@ -157,6 +186,10 @@ class ForwardSMSService : Service() {
         filter.addAction("android.provider.Telephony.SMS_RECEIVED")
         filter.addAction("android.intent.action.PHONE_STATE")
         registerReceiver(receiver, filter)
+
+
+
+
     }
 
     override fun onDestroy() {

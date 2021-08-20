@@ -1,14 +1,18 @@
 package com.ester.remotetrigger.activity
 
 import android.Manifest
-import android.support.v7.app.AppCompatActivity
+import android.app.Activity
+import android.app.role.RoleManager
+import android.content.Context
 import android.os.Bundle
 import android.os.Build
 import android.content.pm.PackageManager
-import android.support.v4.app.ActivityCompat
+import androidx.core.app.ActivityCompat
 import android.widget.Toast
 import android.content.Intent
 import android.preference.PreferenceManager
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import com.ester.remotetrigger.config.Constants
 import com.ester.remotetrigger.service.ForwardSMSService
 import com.ester.remotetrigger.R
@@ -25,19 +29,15 @@ class MainActivity : AppCompatActivity() {
 
         val startServiceIntent = Intent(this, ForwardSMSService::class.java)
         startServiceIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
-        startService(startServiceIntent)
+
+
 
         btSettings.setOnClickListener {
-            var intent : Intent = Intent(this, SettingsActivity::class.java)
+            val intent : Intent = Intent(this, SettingsActivity::class.java)
             startActivity(intent)
         }
 
         val sp = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        swFTQQ.setOnClickListener {
-            val edit = sp.edit()
-            edit.putBoolean("send.ftqq", swFTQQ.isChecked)
-            edit.apply()
-        }
 
         swEmail.setOnClickListener {
             val edit = sp.edit()
@@ -51,7 +51,21 @@ class MainActivity : AppCompatActivity() {
             edit.apply()
         }
 
-        swFTQQ.isChecked = sp.getBoolean("send.ftqq", false)
+        btStop.setOnClickListener {
+
+            if (btStop.text == "停止服务") {
+                stopService(startServiceIntent)
+                trigger_text.text = "监听已停止！"
+
+                btStop.text = "启动服务"
+            } else {
+                startForegroundService(startServiceIntent)
+                trigger_text.text = "事件监听中……"
+
+                btStop.text = "停止服务"
+            }
+        }
+
         swEmail.isChecked = sp.getBoolean("send.email", false)
         swBark.isChecked = sp.getBoolean("send.bark", false)
     }
@@ -62,6 +76,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.RECEIVE_SMS,
                 Manifest.permission.READ_CONTACTS,
                 Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_CALL_LOG,
                 Manifest.permission.INTERNET
         )
 
@@ -74,9 +89,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (needPermissions) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(permissions, REQUEST_CODE)
-            }
+            requestPermissions(permissions, REQUEST_CODE)
         }
     }
 

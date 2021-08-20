@@ -64,11 +64,11 @@ class ForwardService(context: Context) {
 
             val session: Session = Session.getInstance(properties)
             val message: Message = MimeMessage(session)
-            val me:String = sp.getString("settings.smtp_user", "")
-            val to:String = sp.getString("settings.smtp_receive", "")
-            val host:String = sp.getString("settings.smtp_host", "")
-            val user:String = sp.getString("settings.smtp_user", "")
-            val pwd:String = sp.getString("settings.smtp_pwd", "")
+            val me:String? = sp.getString("settings.smtp_user", "")
+            val to:String? = sp.getString("settings.smtp_receive", "")
+            val host:String? = sp.getString("settings.smtp_host", "")
+            val user:String? = sp.getString("settings.smtp_user", "")
+            val pwd:String? = sp.getString("settings.smtp_pwd", "")
 
             message.subject = "$text【转发提醒】"
             message.setText(desp)
@@ -111,19 +111,23 @@ class ForwardService(context: Context) {
         Log.d(LOG_TAG, "Notify send bark")
 
         val apiService = BarkApiService.create()
-        val call = apiService.sendNotify(sp.getString("settings.barkkey", ""), text, desp)
-        call.enqueue(object : Callback<BarkNotifyResult> {
-            override fun onResponse(call: Call<BarkNotifyResult>?, response: Response<BarkNotifyResult>?) {
-                if (response?.code() == 200) {
-                    Log.d(LOG_TAG, "Tel Bark Notify sent ${response.body()?.code}")
-                } else {
-                    Log.e(LOG_TAG, "Tel Bark Notify sent error ${response?.errorBody()}")
-                }
-            }
+        val key = sp.getString("settings.barkkey", "")
 
-            override fun onFailure(call: Call<BarkNotifyResult>, t: Throwable) {
-                Log.e(LOG_TAG, "Tel Bark Notify sent error ${t.message}")
-            }
-        })
+        if (key != null) {
+            val call = apiService.sendNotify(key, text, desp)
+            call.enqueue(object : Callback<BarkNotifyResult> {
+                override fun onResponse(call: Call<BarkNotifyResult>?, response: Response<BarkNotifyResult>?) {
+                    if (response?.code() == 200) {
+                        Log.d(LOG_TAG, "Tel Bark Notify sent ${response.body()?.code}")
+                    } else {
+                        Log.e(LOG_TAG, "Tel Bark Notify sent error ${response?.errorBody()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<BarkNotifyResult>, t: Throwable) {
+                    Log.e(LOG_TAG, "Tel Bark Notify sent error ${t.message}")
+                }
+            })
+        }
     }
 }

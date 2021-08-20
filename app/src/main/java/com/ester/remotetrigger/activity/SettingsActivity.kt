@@ -1,9 +1,9 @@
 package com.ester.remotetrigger.activity
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.text.SpannableStringBuilder
+import androidx.appcompat.app.AppCompatActivity
 import com.ester.remotetrigger.R
 import kotlinx.android.synthetic.main.activity_settings.*
 
@@ -13,7 +13,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         val sp = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        txtFTkey.text = SpannableStringBuilder(sp.getString("settings.ftkey", ""))
+//        txtFTkey.text = SpannableStringBuilder(sp.getString("settings.ftkey", ""))
         txtBarkkey.text = SpannableStringBuilder(sp.getString("settings.barkkey", ""))
         txtSMTPHost.text = SpannableStringBuilder(sp.getString("settings.smtp_host", ""))
         txtSMTPUser.text = SpannableStringBuilder(sp.getString("settings.smtp_user", ""))
@@ -26,7 +26,7 @@ class SettingsActivity : AppCompatActivity() {
 
         btSave.setOnClickListener {
             val edit = sp.edit()
-            edit.putString("settings.ftkey", txtFTkey.text.toString())
+//            edit.putString("settings.ftkey", txtFTkey.text.toString())
             edit.putString("settings.barkkey", txtBarkkey.text.toString())
             edit.putString("settings.smtp_host", txtSMTPHost.text.toString())
             edit.putString("settings.smtp_user", txtSMTPUser.text.toString())
